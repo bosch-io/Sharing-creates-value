@@ -1,0 +1,36 @@
+@startuml
+
+control "Jenkins:\nCI Infrastructure" as ci
+participant "Maven:\nBuild Tool" as buildtool
+participant "Git:\nSource Code\nRepository" as scm
+participant "Tina/Antenna:\nCompliance Checker" as compliancechecker
+participant "Sonatype iQ:\nComponent Metadata\nRepository" as comprepo
+participant "Tina/Antenna:\nFOSS Compliance\nBundle Generator" as fossbundle
+participant "Nexus:\nArtifact Repository" as artifactrepo
+participant "Tina:\nLicense Metadata\nRepository" as licenserepo
+participant "OSS Office:\nComponent\nAnalysis Service" as compclearing
+
+ci -> scm : Check out project source revision
+scm -> ci : Project sources
+ci -> buildtool : Run Building
+buildtool -> buildtool : Identify dependencies
+buildtool -> artifactrepo : Download dependencies
+artifactrepo -> buildtool : Requested components
+buildtool -> buildtool : Build software
+buildtool -> compliancechecker : Run OSM check on dependencies
+compliancechecker -> comprepo : Get metadata for dependencies
+comprepo -> comprepo : Run policy check on\nknown component metadata\nand the composition
+comprepo -> compliancechecker : Metadata for known dependencies
+comprepo -> compliancechecker : List of unknown dependencies
+compliancechecker -> compliancechecker : Add metadata from\nproject specific configuration
+compliancechecker -> fossbundle : Generate FOSS bundle and list obligations
+fossbundle -> artifactrepo : Retrieve source code\nfor FOSS components
+artifactrepo -> fossbundle : Component sources
+fossbundle -> licenserepo : Get licenses texts\nfor all referenced licenses
+licenserepo -> fossbundle : License texts
+fossbundle -> fossbundle : Create product legal information
+fossbundle -> fossbundle : Create source code bundle
+fossbundle --> compliancechecker : Done
+compliancechecker --> buildtool : Done
+buildtool --> ci : Done
+@enduml

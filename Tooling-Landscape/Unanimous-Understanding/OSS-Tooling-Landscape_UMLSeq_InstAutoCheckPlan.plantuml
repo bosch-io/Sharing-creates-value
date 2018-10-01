@@ -1,0 +1,43 @@
+@startuml
+
+control "Jenkins:\nCI Infrastructure" as ci
+participant "Any:\nBuild Tool" as buildtool
+participant "Any:\nSource Code\nRepository" as scm
+participant "Antenna:\nCompliance\nChecker" as compliancechecker
+participant "ORT/Qtrmtr/Configfile/Any:\nDependency Identifier" as depident
+participant "SW360:\nComponent Metadata\nRepository" as comprepo
+participant "SW360:\nProduct Metadata\nRepository" as prodrepo
+participant "Antenna:\nFOSS Compliance\nBundle Generator" as fossbundle
+participant "Any:\nArtifact\nRepository" as artifactrepo
+participant "SW360:\nLicense Metadata\nRepository" as licenserepo
+
+ci -> scm : Check out project source revision
+scm -> ci : Project sources
+ci -> buildtool : Run Building
+buildtool -> buildtool : Identify dependencies
+buildtool -> artifactrepo : Download dependencies
+artifactrepo -> buildtool : Requested components
+buildtool -> buildtool : Build software
+buildtool -> compliancechecker : Run OSM check on dependencies
+compliancechecker -> depident : Identify dependencies
+depident -> buildtool : Optional:  Get dependencies
+buildtool -> depident : Optional: Technology specific list of dependencies
+depident -> depident : Optional: Translate dependencies\nto common format
+depident -> compliancechecker : Dependencies
+compliancechecker -> comprepo : Get metadata for dependencies
+comprepo -> compliancechecker : Metadata for known dependencies
+comprepo -> compliancechecker : List of unknown dependencies
+compliancechecker -> compliancechecker : Run policy check on\nknown component metadata\nand the composition
+compliancechecker -> prodrepo : Store product with identified dependencies
+compliancechecker -> fossbundle : Generate FOSS bundle and list obligations
+fossbundle -> artifactrepo : Optional: Retrieve source\ncode for FOSS components
+artifactrepo -> fossbundle : Optional: Component sources
+fossbundle -> licenserepo : Get company wide\naccepted obligations\nfor all referenced licenses
+licenserepo -> fossbundle : License obligations
+fossbundle -> fossbundle : Create product legal information\n(including Copyrights)
+fossbundle -> fossbundle : Optional: Create source code bundle
+fossbundle -> fossbundle : Create report on:\n* Not automatically\n  fulfilled obligations\n* Unknown components
+fossbundle --> compliancechecker : Done
+compliancechecker --> buildtool : Done
+buildtool --> ci : Done
+@enduml
